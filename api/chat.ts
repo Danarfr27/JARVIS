@@ -38,8 +38,9 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error("Gemini error response:", errorText);
       return new Response(
-        JSON.stringify({ error: `Gemini API error: ${response.status}` }),
+        JSON.stringify({ error: `Gemini API error: ${response.status}`, details: errorText }),
         {
           status: 502,
           headers: { "Content-Type": "application/json" },
