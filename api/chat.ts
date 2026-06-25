@@ -1,17 +1,5 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
 
-function validateMessages(body: any): body is { role: string; text: string }[] {
-  return (
-    Array.isArray(body?.messages) &&
-    body.messages.every(
-      (item: any) =>
-        item &&
-        typeof item.role === "string" &&
-        typeof item.text === "string"
-    )
-  );
-}
-
 export default async function handler(request: Request) {
   if (request.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
@@ -30,7 +18,7 @@ export default async function handler(request: Request) {
     });
   }
 
-  if (!validateMessages(payload)) {
+  if (!Array.isArray(payload?.messages) || payload.messages.length === 0) {
     return new Response(JSON.stringify({ error: "Invalid request payload" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
@@ -44,9 +32,9 @@ export default async function handler(request: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        contents: payload.messages.map((msg: { role: string; text: string }) => ({
-          role: msg.role,
-          parts: [{ text: msg.text }],
+        contents: payload.messages.map((msg: any) => ({
+          role: msg.role || "user",
+          parts: [{ text: msg.text || "" }],
         })),
         generationConfig: {
           temperature: 0.7,
@@ -58,7 +46,7 @@ export default async function handler(request: Request) {
     if (!response.ok) {
       const errorText = await response.text();
       return new Response(
-        JSON.stringify({ error: `Gemini API error: ${response.status} - ${errorText}` }),
+        JSON.stringify({ error: `Gemini API error: ${response.status}` }),
         {
           status: 502,
           headers: { "Content-Type": "application/json" },
