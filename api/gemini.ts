@@ -15,7 +15,7 @@ export const geminiRouter = createRouter({
           parts: [{ text: msg.text }],
         }));
 
-        const response = await fetch(`${GEMINI_API_URL}?key=AIzaSyC9hy_ONwDBh0t6vBhDVHqEsA6VkPqG9dE`, {
+        const response = await fetch(`${GEMINI_API_URL}?key=AIzaSyCfmj-JsVO0o3Sh5mb9fgUsstPPigKfLb8`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
