@@ -1,6 +1,34 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export async function POST(request: Request) {
+  // If no API key, return mock response for testing
+  if (!GEMINI_API_KEY) {
+    // Mock response untuk testing
+    const mockResponses = [
+      "Halo! Saya adalah JARVIS, asisten AI Anda. Bagaimana saya bisa membantu Anda hari ini?",
+      "Saya siap membantu Anda dengan berbagai pertanyaan dan tugas. Apa yang ingin Anda ketahui?",
+      "Terima kasih telah menghubungi saya. Saya di sini untuk membantu Anda. Ada yang bisa saya bantu?",
+      "Halo! Saya JARVIS, asisten virtual Anda. Silakan tanyakan apa saja yang ingin Anda ketahui.",
+    ];
+    
+    const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
+    
+    // Log untuk debugging
+    console.log("DEBUG: No GEMINI_API_KEY set, using mock response");
+    
+    return new Response(
+      JSON.stringify({ 
+        text: randomResponse,
+        _debug: "Mock response - set GEMINI_API_KEY environment variable for real responses"
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
+
   let payload: any;
   try {
     payload = await request.json();
@@ -19,7 +47,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=AIzaSyC9hy_ONwDBh0t6vBhDVHqEsA6VkPqG9dE`, {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
