@@ -1,13 +1,6 @@
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
 
-export default async function handler(request: Request) {
-  if (request.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
-
+export async function POST(request: Request) {
   let payload: any;
   try {
     payload = await request.json();
@@ -69,3 +62,4 @@ export default async function handler(request: Request) {
     });
   }
 }
+
