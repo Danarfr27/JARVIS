@@ -9,13 +9,17 @@
       }
     },
     {
-      "src": "api/index.ts",
+      "src": "api/chat.ts",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
+      "src": "^/api/chat$",
+      "dest": "/api/chat.ts"
+    },
+    {
+      "src": "^/api/(.*)$",
       "dest": "/api/index.ts"
     },
     {

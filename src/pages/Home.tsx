@@ -6,7 +6,7 @@ import { SystemMonitor } from "@/components/SystemMonitor";
 import { TranscriptPanel, type Message } from "@/components/TranscriptPanel";
 import { useSpeech } from "@/hooks/useSpeech";
 import { useParticles } from "@/hooks/useParticles";
-import { trpc } from "@/providers/trpc";
+import { chatWithGemini } from "@/lib/chat-api";
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,7 +16,6 @@ export default function Home() {
   const [showIntro, setShowIntro] = useState(true);
   const [currentTranscript, setCurrentTranscript] = useState("");
   const processedRef = useRef<string>("");
-  const chatMutation = trpc.gemini.chat.useMutation();
 
   const {
     isListening,
@@ -74,9 +73,7 @@ export default function Home() {
           text: m.text,
         }));
 
-        const response = await chatMutation.mutateAsync({
-          messages: chatHistory,
-        });
+        const response = await chatWithGemini(chatHistory);
 
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -108,7 +105,7 @@ export default function Home() {
         setCurrentTranscript("");
       }
     },
-    [messages, isProcessing, isMuted, speak, chatMutation]
+    [messages, isProcessing, isMuted, speak]
   );
 
   const toggleListening = useCallback(() => {

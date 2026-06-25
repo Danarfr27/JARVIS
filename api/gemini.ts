@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createRouter, publicQuery } from "./middleware";
+import { createRouter, publicQuery } from "./middleware.js";
 import { ChatRequestSchema } from "@contracts/gemini";
 
 // Free Gemini API endpoint - no API key needed for gemini-2.0-fl-lite-preview
