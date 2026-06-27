@@ -1,4 +1,10 @@
-import "dotenv/config";
+import path from "path";
+import dotenv from "dotenv";
+
+const envDir = process.cwd();
+
+dotenv.config({ path: path.resolve(envDir, ".env.local"), override: true });
+dotenv.config({ path: path.resolve(envDir, ".env"), override: false });
 
 function required(name: string): string {
   const value = process.env[name];

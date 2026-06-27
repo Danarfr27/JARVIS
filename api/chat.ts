@@ -1,29 +1,36 @@
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
+import "./lib/env";
+
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-tts-preview";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+console.log("[api/chat] GEMINI_MODEL=", GEMINI_MODEL, "GEMINI_API_KEY_SET=", Boolean(GEMINI_API_KEY));
+
+export async function GET() {
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      message: "Use POST /api/chat with a JSON body containing { messages: [{ role, text }] }.",
+      model: GEMINI_MODEL,
+    }),
+    {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }
+  );
+}
+
 export async function POST(request: Request) {
-  // If no API key, return mock response for testing
   if (!GEMINI_API_KEY) {
-    // Mock response untuk testing
-    const mockResponses = [
-      "Halo! Saya adalah JARVIS, asisten AI Anda. Bagaimana saya bisa membantu Anda hari ini?",
-      "Saya siap membantu Anda dengan berbagai pertanyaan dan tugas. Apa yang ingin Anda ketahui?",
-      "Terima kasih telah menghubungi saya. Saya di sini untuk membantu Anda. Ada yang bisa saya bantu?",
-      "Halo! Saya JARVIS, asisten virtual Anda. Silakan tanyakan apa saja yang ingin Anda ketahui.",
-    ];
-    
-    const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-    
-    // Log untuk debugging
-    console.log("DEBUG: No GEMINI_API_KEY set, using mock response");
-    
+    console.error("/api/chat error: GEMINI_API_KEY missing");
     return new Response(
-      JSON.stringify({ 
-        text: randomResponse,
-        _debug: "Mock response - set GEMINI_API_KEY environment variable for real responses"
+      JSON.stringify({
+        error: "API key missing or disconnected",
+        code: "API_KEY_ERROR",
+        message: "apikey firdhan bot tidak tersambung",
       }),
       {
-        status: 200,
+        status: 502,
         headers: { "Content-Type": "application/json" },
       }
     );
@@ -47,7 +54,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+    const geminiUrl = GEMINI_API_KEY ? `${GEMINI_API_URL}?key=${GEMINI_API_KEY}` : GEMINI_API_URL;
+    const response = await fetch(geminiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,9 +74,15 @@ export async function POST(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Gemini error response:", errorText);
+      console.error("Gemini error response:", response.status, errorText);
+      const apiKeyError = [400, 401, 403, 429].includes(response.status) || /api key|quota|limit/i.test(errorText.toLowerCase());
       return new Response(
-        JSON.stringify({ error: `Gemini API error: ${response.status}`, details: errorText }),
+        JSON.stringify({
+          error: apiKeyError ? "API key missing or limit exceeded" : `Gemini API error: ${response.status}`,
+          code: apiKeyError ? "API_KEY_ERROR" : "GENERIC_API_ERROR",
+          message: apiKeyError ? "apikey firdhan bot tidak tersambung" : errorText,
+          details: errorText,
+        }),
         {
           status: 502,
           headers: { "Content-Type": "application/json" },
@@ -76,8 +90,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, saya tidak dapat memproses permintaan Anda.";
+    const data = (await response.json()) as any;
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, saya tidak dapat memproses permintaan Anda.";
 
     return new Response(JSON.stringify({ text }), {
       status: 200,

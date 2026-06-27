@@ -64,14 +64,14 @@ export default function Home() {
         timestamp: new Date().toLocaleTimeString("id-ID"),
       };
 
-      setMessages((prev) => [...prev, userMessage]);
-
       try {
-        // Prepare messages for Gemini
-        const chatHistory = [...messages, userMessage].map((m) => ({
-          role: m.role,
-          text: m.text,
-        }));
+        let chatHistory: Array<{ role: string; text: string }> = [];
+
+        setMessages((prev) => {
+          const next = [...prev, userMessage];
+          chatHistory = next.map((m) => ({ role: m.role, text: m.text }));
+          return next;
+        });
 
         const response = await chatWithGemini(chatHistory);
 
@@ -90,15 +90,28 @@ export default function Home() {
         }
       } catch (error) {
         console.error("Chat error:", error);
+        const errorText =
+          error instanceof Error
+            ? error.message
+            : typeof error === "string"
+            ? error
+            : JSON.stringify(error ?? "");
+        const isApiKeyError = /API_KEY_ERROR|apikey firdhan bot tidak tersambung|api key|limit|quota/i.test(errorText);
+        const isNetworkError = /NETWORK_ERROR|tidak dapat terhubung|Failed to fetch|endpoint/i.test(errorText);
+        const fallbackText = isApiKeyError
+          ? "Maaf apikey firdhan bot tidak tersambung"
+          : isNetworkError
+          ? "Maaf, endpoint tidak bisa terhubung saat ini."
+          : "Maaf, terjadi kesalahan sistem. Silakan coba lagi.";
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "model",
-          text: "Maaf, terjadi kesalahan sistem. Silakan coba lagi.",
+          text: fallbackText,
           timestamp: new Date().toLocaleTimeString("id-ID"),
         };
         setMessages((prev) => [...prev, errorMessage]);
         if (!isMuted) {
-          speak("Maaf, terjadi kesalahan sistem. Silakan coba lagi.");
+          speak(fallbackText);
         }
       } finally {
         setIsProcessing(false);

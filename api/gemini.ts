@@ -1,9 +1,11 @@
+import "./lib/env.js";
 import { z } from "zod";
 import { createRouter, publicQuery } from "./middleware.js";
 import { ChatRequestSchema } from "@contracts/gemini";
 
-// Free Gemini API endpoint - no API key needed for gemini-2.0-fl-lite-preview
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.1-flash-tts-preview";
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 export const geminiRouter = createRouter({
   chat: publicQuery
@@ -15,7 +17,11 @@ export const geminiRouter = createRouter({
           parts: [{ text: msg.text }],
         }));
 
-        const response = await fetch(`${GEMINI_API_URL}?key=AIzaSyCfmj-JsVO0o3Sh5mb9fgUsstPPigKfLb8`, {
+        const url = GEMINI_API_KEY
+          ? `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`
+          : GEMINI_API_URL;
+
+        const response = await fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
